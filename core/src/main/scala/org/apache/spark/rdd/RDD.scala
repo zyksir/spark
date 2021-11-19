@@ -145,7 +145,8 @@ abstract class RDD[T: ClassTag](
   def sparkContext: SparkContext = sc
 
   /** A unique ID for this RDD (within its SparkContext). */
-  val id: Int = sc.newRddId()
+  // val id: Int = sc.newRddId()
+  val id: Int = sc.newRegRddId(this)
 
   /** A friendly name for this RDD */
   @transient var name: String = _
@@ -317,12 +318,14 @@ abstract class RDD[T: ClassTag](
     }
   }
 
+  val totalUsedCount = sc.longAccumulator
   /**
    * Internal method to this RDD; will read from cache if applicable, or otherwise compute it.
    * This should ''not'' be called by users directly, but is available for implementers of custom
    * subclasses of RDD.
    */
   final def iterator(split: Partition, context: TaskContext): Iterator[T] = {
+    this.totalUsedCount.add(1)
     if (storageLevel != StorageLevel.NONE) {
       getOrCompute(split, context)
     } else {
@@ -354,6 +357,7 @@ abstract class RDD[T: ClassTag](
     ancestors.filterNot(_ == this).toSeq
   }
 
+  val recomputeCount = sc.longAccumulator
   /**
    * Compute an RDD partition or read it from a checkpoint if the RDD is checkpointing.
    */
@@ -362,6 +366,7 @@ abstract class RDD[T: ClassTag](
     if (isCheckpointedAndMaterialized) {
       firstParent[T].iterator(split, context)
     } else {
+      this.recomputeCount.add(1)
       compute(split, context)
     }
   }

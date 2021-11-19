@@ -39,8 +39,17 @@ class RDDInfo(
   var numCachedPartitions = 0
   var memSize = 0L
   var diskSize = 0L
+  var recomputeCount = 0L
+  var totalUsedCount = 0L
 
   def isCached: Boolean = (memSize + diskSize > 0) && numCachedPartitions > 0
+
+  def setRecomputeCount(newRecomputeCount: Long): Unit = {
+    recomputeCount = newRecomputeCount
+  }
+  def setTotalUsedCount(newTotalUsedCount: Long): Unit = {
+    totalUsedCount = newTotalUsedCount
+  }
 
   override def toString: String = {
     import Utils.bytesToString
@@ -68,8 +77,13 @@ private[spark] object RDDInfo {
     } else {
       rdd.creationSite.shortForm
     }
-    new RDDInfo(rdd.id, rddName, rdd.partitions.length,
+    val recomputeCount = rdd.recomputeCount.value
+    val totalUsedCount = rdd.totalUsedCount.value
+    val rddInfo = new RDDInfo(rdd.id, rddName, rdd.partitions.length,
       rdd.getStorageLevel, rdd.isBarrier(), parentIds, callSite, rdd.scope,
       rdd.outputDeterministicLevel)
+    rddInfo.setRecomputeCount(recomputeCount)
+    rddInfo.setTotalUsedCount(totalUsedCount)
+    rddInfo
   }
 }

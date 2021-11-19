@@ -231,6 +231,11 @@ class SparkContext(config: SparkConf) extends Logging {
   private var _shuffleDriverComponents: ShuffleDriverComponents = _
   private var _plugins: Option[PluginContainer] = None
   private var _resourceProfileManager: ResourceProfileManager = _
+  private var _isCacheHelperEnabled: Boolean = false
+  //[TODO] private 
+  var _enableCacheThreshold: Int = 1
+  // private 
+  var _disableCacheThreshold: Int = 1
 
   /* ------------------------------------------------------------------------------------- *
    | Accessors and public fields. These provide access to the internal state of the        |
@@ -2055,10 +2060,28 @@ class SparkContext(config: SparkConf) extends Logging {
     }.start()
   }
 
+  def printComputeCountWarnInfo(): Unit = {
+    val rddInfos = AllRDDStorageInfo().
+      filter(!_.isCached).
+      filter(_.recomputeCount >= _enableCacheThreshold)
+    logInfo(s"Recommended Cached RDDs: ${rddInfos.map(_.name).mkString(",")}.")
+  }
+
+  def printCacheSizeWarnStorageInfo(): Unit = {
+    val rddInfos = AllRDDStorageInfo().
+      filter(_.isCached).
+      filter(_.totalUsedCount - _.recomputeCount < _disableCacheThreshold)
+    logInfo(s"Recommended NOT Cached RDDs: ${rddInfos.map(_.name).mkString(",")}.")
+  }
+
   /**
    * Shut down the SparkContext.
    */
   def stop(): Unit = {
+    if (_isCacheHelperEnabled) {
+      printCacheSizeWarnStorageInfo()
+      printComputeCountWarnInfo()
+    }
     if (LiveListenerBus.withinListenerThread.value) {
       throw new SparkException(s"Cannot stop SparkContext within listener bus thread.")
     }
@@ -2518,6 +2541,20 @@ class SparkContext(config: SparkConf) extends Logging {
 
   def getCheckpointDir: Option[String] = checkpointDir
 
+  def enableCacheHelper(): Unit = {
+    _isCacheHelperEnabled = true
+  }
+
+  /** a RDD should be persisted if its recomputation time is greater than _enableCacheThreshold */
+  def setEnableCacheThreshold(threshold: Int): Unit = {
+    _enableCacheThreshold = threshold
+  }
+
+  /** a RDD should NOT be persisted if its recomputation time is less than _disableCacheThreshold */
+  def setDisableCacheThreshold(threshold: Int): Unit = {
+    _disableCacheThreshold = threshold
+  }
+
   /** Default level of parallelism to use when not given by user (e.g. parallelize and makeRDD). */
   def defaultParallelism: Int = {
     assertNotStopped()
@@ -2539,6 +2576,32 @@ class SparkContext(config: SparkConf) extends Logging {
 
   /** Register a new RDD, returning its RDD ID */
   private[spark] def newRddId(): Int = nextRddId.getAndIncrement()
+
+  // private[spark]
+  val allRdds = {
+    val map: ConcurrentMap[Int, RDD[_]] =
+      new MapMaker().weakValues().makeMap[Int, RDD[_]]()
+    map.asScala
+  }
+  private[spark] def newRegRddId(rdd: RDD[_]): Int = {
+    val next_id = newRddId()
+    allRdds(next_id) = rdd
+    next_id
+  }
+  //[TODO] private[spark]
+  def AllRDDStorageInfo(): Array[RDDInfo] = {
+    assertNotStopped()
+    val rddInfos = allRdds.values.map(RDDInfo.fromRdd).toArray
+    rddInfos.foreach { rddInfo =>
+      val rddId = rddInfo.id
+      val rddStorageInfo = statusStore.asOption(statusStore.rdd(rddId))
+      rddInfo.recomputeCount = (rddInfo.recomputeCount / rddInfo.numPartitions) - 1
+      if(rddInfo.numCachedPartitions != 0) {
+        rddInfo.totalUsedCount = rddInfo.totalUsedCount / rddInfo.numCachedPartitions
+      }
+    }
+    rddInfos
+  }
 
   /**
    * Registers listeners specified in spark.extraListeners, then starts the listener bus.
