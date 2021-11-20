@@ -2070,7 +2070,7 @@ class SparkContext(config: SparkConf) extends Logging {
   def printCacheSizeWarnStorageInfo(): Unit = {
     val rddInfos = AllRDDStorageInfo().
       filter(_.isCached).
-      filter(_.totalUsedCount - _.recomputeCount < _disableCacheThreshold)
+      filter(rddInfo => rddInfo.totalUsedCount - rddInfo.recomputeCount < _disableCacheThreshold)
     logInfo(s"Recommended NOT Cached RDDs: ${rddInfos.map(_.name).mkString(",")}.")
   }
 
