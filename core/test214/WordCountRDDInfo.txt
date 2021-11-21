@@ -1,0 +1,13 @@
+0, List(), ./core/test214/grades.csv, false, 3, 8
+1, List(0), gradeData, false, 3, 8
+10, List(1), MapPartitionsRDD, false, 0, 2
+11, List(10), MapPartitionsRDD, false, 0, 2
+12, List(11), MapPartitionsRDD, false, 0, 2
+13, List(12), ShuffledRDD, false, 0, 2
+14, List(13), averageGrade, false, 0, 2
+15, List(1), MapPartitionsRDD, false, 0, 2
+16, List(15), MapPartitionsRDD, false, 0, 2
+17, List(16), MapPartitionsRDD, false, 0, 2
+18, List(17), MapPartitionsRDD, false, 0, 2
+19, List(18), ShuffledRDD, false, 0, 2
+20, List(19), averageData, false, 0, 4
