@@ -9,6 +9,6 @@
 16	15	MapPartitionsRDD	false	0	1
 17	16	MapPartitionsRDD	false	0	1
 18	17	MapPartitionsRDD	false	0	1
-19	18	ShuffledRDD	false	0	1
-20	19	averageData	true	0	3
+19	18	ShuffledRDD	false	2	3
+20	19	averageData	false	2	3
 23	20	MapPartitionsRDD	false	0	1
