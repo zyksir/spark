@@ -1,0 +1,14 @@
+0		./core/test214/grades.csv	false	3	4
+1	0	gradeData	false	3	4
+10	1	MapPartitionsRDD	false	0	1
+11	10	MapPartitionsRDD	false	0	1
+12	11	MapPartitionsRDD	false	0	1
+13	12	ShuffledRDD	false	0	1
+14	13	averageGrade	false	0	1
+15	1	MapPartitionsRDD	false	0	1
+16	15	MapPartitionsRDD	false	0	1
+17	16	MapPartitionsRDD	false	0	1
+18	17	MapPartitionsRDD	false	0	1
+19	18	ShuffledRDD	false	0	1
+20	19	averageData	true	0	3
+23	20	MapPartitionsRDD	false	0	1

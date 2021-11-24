@@ -2595,10 +2595,14 @@ class SparkContext(config: SparkConf) extends Logging {
     rddInfos.foreach { rddInfo =>
       val rddId = rddInfo.id
       val rddStorageInfo = statusStore.asOption(statusStore.rdd(rddId))
+      rddInfo.numCachedPartitions = rddStorageInfo.map(_.numCachedPartitions).getOrElse(0)
+      rddInfo.memSize = rddStorageInfo.map(_.memoryUsed).getOrElse(0L)
+      rddInfo.diskSize = rddStorageInfo.map(_.diskUsed).getOrElse(0L)
       rddInfo.recomputeCount = (rddInfo.recomputeCount / rddInfo.numPartitions) - 1
-      if(rddInfo.numCachedPartitions != 0) {
-        rddInfo.totalUsedCount = rddInfo.totalUsedCount / rddInfo.numCachedPartitions
-      }
+      rddInfo.totalUsedCount = rddInfo.totalUsedCount / rddInfo.numPartitions
+      // if(rddInfo.numCachedPartitions != 0) {
+      //   rddInfo.totalUsedCount = rddInfo.totalUsedCount / rddInfo.numCachedPartitions
+      // }
     }
     rddInfos
   }
