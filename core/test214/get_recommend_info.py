@@ -38,56 +38,56 @@ def get_ancesters(rddId2Info, src2dest, dest2src):
 rddId2Info, src2dest, dest2src = loadGraphFromFile("CovidInfo_Nopersist.txt")
 rdd2AncestorNodes = get_ancesters(rddId2Info, src2dest, dest2src)
 
-def method1(threahold, rddId2Info):
+def simpleThresholdRecommendation(threshold, rddId2Info):
     res = []
     for key in rddId2Info:
-        if rddId2Info[key][1] >= threahold:
+        if rddId2Info[key][1] >= threshold:
             res.append(key)
     return res
 
-def method2(threahold, rddId2Info):
+def computationCostRecommendation(threshold, rddId2Info):
     res = []
     for key in rddId2Info:
         c = rddId2Info[key][1]
         f = len(rdd2AncestorNodes[key])
-        if c * f >= threahold:
+        if c * f >= threshold:
             #print(key, c * f)
             res.append(key)
     return res
 
-def method3(threahold, method, rddId2Info):
+def onlyChild(threshold, method, rddId2Info):
     # rdds_recompute_count_dict = {}
     # for key in rddId2Info:
     #     recompute_times = rddId2Info[key][1]
-    #     if recompute_times >= threahold:
+    #     if recompute_times >= threshold:
     #         rdds_recompute_count_dict[recompute_times] = rdds_recompute_count_dict.get(recompute_times, []) + [key]
     # for key in rdds_recompute_count_dict:
     #     rdds_recompute_count_dict[key].sort(reverse=True)
 
-    # For each iteration, only persist the child with largest rdd id among the rdds that have recompute count larger than specific threahold.
+    # For each iteration, only persist the child with largest rdd id among the rdds that have recompute count larger than specific threshold.
     rddId2Info = copy.deepcopy(rddId2Info)
-    rdds_threahold = method(threahold, rddId2Info)
-    rdds_threahold.sort()
-    while rdds_threahold:
-        child = rdds_threahold.pop()
+    rdds_threshold = method(threshold, rddId2Info)
+    rdds_threshold.sort()
+    while rdds_threshold:
+        child = rdds_threshold.pop()
         parents = rdd2AncestorNodes[child]
         for parent in parents:
             val = rddId2Info[parent][1] - rddId2Info[child][1]
             if val >= 0:
                 rddId2Info[parent][1] = val
         rddId2Info[child][1] = 0
-        rdds_threahold = method(threahold, rddId2Info)
-        rdds_threahold.sort()
+        rdds_threshold = method(threshold, rddId2Info)
+        rdds_threshold.sort()
         print(f"Persist rdd id {child} and Name {rddId2Info[child][0]}")
 
 if __name__ == "__main__":
-    rddIds = method1(2, rddId2Info)
+    rddIds = simpleThresholdRecommendation(2, rddId2Info)
     nameList = [rddId2Info[child][0] for child in rddIds]
     print(f"Persist with method 1: {rddIds}, {nameList}")
-    rddIds = method2(5, rddId2Info)
+    rddIds = computationCostRecommendation(5, rddId2Info)
     nameList = [rddId2Info[child][0] for child in rddIds]
     print(f"Persist with method 2: {rddIds}, {nameList}")
     print("Persist with method 1 with improvement:")
-    method3(2, method1, rddId2Info)
+    onlyChild(2, simpleThresholdRecommendation, rddId2Info)
     print("Persist with method 2 with improvement:")
-    method3(5, method2, rddId2Info)
+    onlyChild(5, computationCostRecommendation, rddId2Info)

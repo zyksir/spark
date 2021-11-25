@@ -1,9 +1,9 @@
 val iters = 10
-val lines = spark.sparkContext.textFile("./core/test214/pagerank_data.txt")
+val lines = spark.sparkContext.textFile("./core/test214/pagerank_data.txt").setName("lines")
 val links = lines.map{ s =>
     val parts = s.split("\\s+")
     (parts(0), parts(1))
-}.distinct().groupByKey().cache()
+}.distinct().groupByKey().setName("links") // .cache()
 var ranks = links.mapValues(v => 1.0)
 
 for (i <- 1 to iters) {
@@ -21,3 +21,10 @@ var allRDDIno = sc.AllRDDStorageInfo()
 var len = allRDDIno.length
 println(len)
 allRDDIno.map(x => (x.recomputeCount, x.totalUsedCount, x.name, x.parentIds, x.id, x.numCachedPartitions))
+
+var allRDDIno = sc.AllRDDStorageInfo()
+import java.io._
+val pw = new PrintWriter(new File("./core/test214/PageRankRDDInfo_Nopersist.txt" ))
+allRDDIno.sortWith(_.id < _.id).
+  foreach(x => pw.write(f"${x.id}\t${x.parentIds.mkString(",")}\t${x.name}\t${x.isCached}\t${x.recomputeCount}\t${x.totalUsedCount}\n"))
+pw.close
