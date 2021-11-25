@@ -35,7 +35,7 @@ def get_ancesters(rddId2Info, src2dest, dest2src):
         dfs(node)
     return rdd2AncestorNodes
 
-rddId2Info, src2dest, dest2src = loadGraphFromFile("WordCountRDDInfo.txt")
+rddId2Info, src2dest, dest2src = loadGraphFromFile("CovidInfo_Nopersist.txt")
 rdd2AncestorNodes = get_ancesters(rddId2Info, src2dest, dest2src)
 
 def method1(threahold, rddId2Info):
@@ -78,14 +78,16 @@ def method3(threahold, method, rddId2Info):
         rddId2Info[child][1] = 0
         rdds_threahold = method(threahold, rddId2Info)
         rdds_threahold.sort()
-        print("Persist rdd id:", child)
+        print(f"Persist rdd id {child} and Name {rddId2Info[child][0]}")
 
-def main():
-    print("Persist with method 1:",method1(2, rddId2Info))
-    print("Persist with method 2:",method2(5, rddId2Info))
+if __name__ == "__main__":
+    rddIds = method1(2, rddId2Info)
+    nameList = [rddId2Info[child][0] for child in rddIds]
+    print(f"Persist with method 1: {rddIds}, {nameList}")
+    rddIds = method2(5, rddId2Info)
+    nameList = [rddId2Info[child][0] for child in rddIds]
+    print(f"Persist with method 2: {rddIds}, {nameList}")
     print("Persist with method 1 with improvement:")
     method3(2, method1, rddId2Info)
     print("Persist with method 2 with improvement:")
     method3(5, method2, rddId2Info)
-
-main()
