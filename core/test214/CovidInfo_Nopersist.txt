@@ -1,0 +1,11 @@
+0		./core/test214/covid19_cases.txt	false	2	3
+1	0	./core/test214/covid19_cases.txt	false	2	3
+2	1	MapPartitionsRDD	false	2	3
+3	2	covidCaseData	false	2	3
+8	3	MapPartitionsRDD	false	0	1
+9	8	MapPartitionsRDD	false	0	1
+10	9	ShuffledRDD	false	0	1
+11	10	avgNewCasesPerCountry	false	0	1
+12	3	MapPartitionsRDD	false	0	1
+13	12	newDeathsPerDay	false	3	4
+17	13	MapPartitionsRDD	false	0	1
